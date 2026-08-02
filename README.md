@@ -89,11 +89,13 @@ Without this step you'd have to run Mnemosyne by hand every time. With it, Claud
 its own whenever it's relevant.
 
 **Windows:**
+
 ```powershell
 Copy-Item -Recurse -Force "$env:USERPROFILE\.mnemosyne\skill" "$env:USERPROFILE\.claude\skills\mnemosyne"
 ```
 
 **Mac:**
+
 ```bash
 mkdir -p ~/.claude/skills
 cp -r ~/.mnemosyne/skill ~/.claude/skills/mnemosyne
@@ -107,6 +109,7 @@ up when a session starts.
 Ask Claude: *"what skills do you have available?"* — `mnemosyne` should be in the list.
 
 You can also test it directly yourself:
+
 - Windows: `& "$env:USERPROFILE\.mnemosyne\mnemosyne.cmd" status`
 - Mac: `~/.mnemosyne/mnemosyne.sh status`
 
@@ -125,6 +128,42 @@ Just talk to Claude normally. Two things it'll do on its own once the skill is i
 The first time it actually needs to think about meaning (not just match words), it'll quietly
 download a small AI model (about 130MB, one time, needs internet for that one moment) — after that,
 everything is fully offline.
+
+## Installing somewhere other than your home folder
+
+The steps above put Mnemosyne at `%USERPROFILE%\.mnemosyne` / `~/.mnemosyne` and make it available to
+*every* Claude Code project on your machine. That's just the easy default — nothing requires that
+exact spot. Two real reasons to put it elsewhere:
+
+**You want it scoped to one project, not your whole machine** — say, a separate memory per project
+instead of one shared one. Put the whole `mnemosyne` folder inside that project instead of your home
+folder, and install the skill into that project's own `.claude\skills\` instead of the global one:
+
+```powershell
+# Inside the project folder itself:
+Copy-Item -Recurse -Force "$env:USERPROFILE\.mnemosyne" ".\mnemosyne"
+New-Item -ItemType Directory -Force ".claude\skills" | Out-Null
+Copy-Item -Recurse -Force ".\mnemosyne\skill" ".claude\skills\mnemosyne"
+```
+
+Then open `.claude\skills\mnemosyne\SKILL.md` and replace the `%USERPROFILE%\.mnemosyne\mnemosyne.cmd`
+paths with just `mnemosyne\mnemosyne.cmd` (no drive letter, no `%USERPROFILE%`) — since Claude Code
+runs commands from the project's own folder, a path relative to the project root is enough; it
+doesn't need to be absolute. (Mac/Linux: same idea, `mnemosyne/mnemosyne.sh` in `SKILL.md`, and prefer
+the `.sh` launcher over `.cmd` if the project path ever has a space in it — Git Bash can mis-split
+quoted arguments against a `.cmd` target when that happens.)
+
+**Claude Code itself is pointed at a different config root** — if you've set a custom
+`CLAUDE_CONFIG_DIR` environment variable (an isolated Claude Code setup, separate from the normal
+`~/.claude`), the *global* skills folder is `$CLAUDE_CONFIG_DIR\skills\` instead of
+`~/.claude/skills/`. Same install commands, just swap that one destination folder — and in that case
+an absolute path in `SKILL.md` (wherever you actually put the `mnemosyne` folder) works fine, since a
+custom config root isn't tied to any one project's working directory the way the project-scoped case
+above is.
+
+Either way, the rule is the same: **the tool folder and the paths inside `SKILL.md` have to agree.**
+If a query ever fails with "file not found," that's almost always the fix — check what `SKILL.md`
+actually points at against where the `mnemosyne` folder actually is.
 
 ## If something seems off
 
