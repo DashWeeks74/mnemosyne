@@ -10,6 +10,13 @@ further down.)
 **Requires:** Claude Code (Anthropic's CLI/IDE tool) already installed and working on your machine.
 This isn't a Claude Code install guide — get that running first, then come back to this.
 
+## Why "Mnemosyne"?
+
+In Greek mythology, Mnemosyne is the Titaness who personifies memory itself — and the mother of the
+nine Muses, who preside over every art and science that grew out of what she remembered. It's about
+as literal a name as you can get for a tool whose only job is remembering things accurately and
+handing them back, unchanged, when asked.
+
 ## Why not just use Claude's built-in memory?
 
 Claude Code already has its own memory feature, so this is a fair question. They do different jobs,
