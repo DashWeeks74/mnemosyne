@@ -2,8 +2,10 @@
 
 This gives Claude a memory of decisions and reasoning you've discussed before — "what did we decide
 about X" or "why did we choose Y" — that it can search back through instead of you having to
-re-explain everything each time. It runs entirely on your own computer: no account, no API key, no
-company sees your data, and after the one-time setup it works fully offline.
+re-explain everything each time. It runs entirely on your own computer: no account, no API key, and
+nothing you save is ever sent to any company or service — the search itself is a local computation,
+not a call to anyone's API. (More on exactly what that means, including one small one-time download,
+further down.)
 
 **Requires:** Claude Code (Anthropic's CLI/IDE tool) already installed and working on your machine.
 This isn't a Claude Code install guide — get that running first, then come back to this.
@@ -125,9 +127,19 @@ Just talk to Claude normally. Two things it'll do on its own once the skill is i
   approach?"* — it searches everything you've had it remember and shows you the actual source, not
   just an answer it made up. Every result names exactly where it came from.
 
-The first time it actually needs to think about meaning (not just match words), it'll quietly
-download a small AI model (about 130MB, one time, needs internet for that one moment) — after that,
-everything is fully offline.
+The first time it needs to compare *meaning* rather than just matching words, it downloads a small
+(~130MB) model to do that — **not Claude, not an agent, nothing that "thinks" or generates text.** It's
+a much simpler kind of model whose only job is turning a piece of text into a list of numbers that
+represent what it means, so "why did we pick Postgres" can match a document that says "we chose
+Postgres because..." even though the wording is different — pure math on those numbers, nothing more.
+That download needs internet, once; every comparison after that runs locally, no internet involved.
+
+**What "runs locally" actually promises, precisely:** Mnemosyne's own search and storage never call
+out to any company's API and never send your data anywhere — that's the real guarantee, and it holds
+regardless of how much internet you have. It is *not* a claim that your whole Claude Code setup can
+run with no internet at all — Claude Code itself always needs a connection to reach Anthropic.
+Mnemosyne just doesn't add a second company, a second API key, or a second point of failure on top of
+that.
 
 ## Installing somewhere other than your home folder
 
