@@ -8,6 +8,30 @@ company sees your data, and after the one-time setup it works fully offline.
 **Requires:** Claude Code (Anthropic's CLI/IDE tool) already installed and working on your machine.
 This isn't a Claude Code install guide — get that running first, then come back to this.
 
+## Why not just use Claude's built-in memory?
+
+Claude Code already has its own memory feature, so this is a fair question. They do different jobs,
+and you can use both:
+
+- **Built-in memory is Claude's own notes, in its own words.** It writes short summaries of things it
+  decided were worth remembering. Handy, but a summary can drift from what you actually said or wrote
+  — and there's no way to check that later, because the original isn't kept alongside it.
+- **Mnemosyne remembers the source, not a summary of it.** Every answer comes back as a citation —
+  the actual document, the exact spot in it, when it was saved — and it flags if that file has
+  changed since. You can always go check the real thing instead of trusting a paraphrase.
+- **Built-in memory is curated by Claude** — it decides what's worth saving. Mnemosyne remembers
+  whatever you point it at: a whole report, a full set of notes, not just what an AI judged
+  interesting enough to write down.
+- **Secret safety is a technical check here, not a promise.** Mnemosyne scans and redacts anything
+  password- or key-shaped before it's ever stored. That's an actual scan running on the content, not
+  an instruction Claude is just trusting itself to follow.
+- **This isn't tied to any one product.** Built-in memory is a Claude Code feature. Mnemosyne is a
+  small standalone tool that happens to work well with it — it'll still be exactly what it is even if
+  that feature changes.
+
+Rule of thumb: built-in memory is great as Claude's running notes on you. Mnemosyne is for "I know I
+wrote this down somewhere — find it, and prove it's actually what I wrote."
+
 ## Install (5 minutes)
 
 **First, download this repo:** go to
