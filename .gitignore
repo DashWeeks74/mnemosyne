@@ -1,0 +1,31 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Python runtime
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local runtime state, never meant to be shared
+*.db
+*.sqlite
+*.sqlite3
+logs/
+*.log
+
+# Defense-in-depth: never commit anything credential-shaped, even by accident
+*.env
+.env.*
+**/secrets/**
+**/credentials/**
+*.pem
+*.key
+*credentials*.json
