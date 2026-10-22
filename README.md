@@ -164,6 +164,7 @@ kind: capture
 id: ups-alert-routing
 what: Route UPS power alerts through Telegram
 status: open
+source: ../docs/network-plan.md#Alerting
 applies_to:
   - alert-routing: like
   - telegram-bot-setup: depends-on
@@ -171,13 +172,21 @@ applies_to:
 ---
 ```
 
-The optional fields are `date`, `outcome`, `status` (`filed`, `open`, `done` or `superseded`) and
-`applies_to`, a list of links. Each link names its relation: `like`, `depends-on`, `blocked-by`,
+The optional fields are `date`, `outcome`, `status` (`filed`, `open`, `done` or `superseded`),
+`source` (where the full record lives) and `applies_to`, a list of links. Each link names its relation: `like`, `depends-on`, `blocked-by`,
 `supersedes`, `contradicts` or `applies-to` (the default). Keep captures in a folder of their own and
 ingest that folder like any other. When a search hits a capture, the result also shows what it links
 to and what links to it, one step out in each direction. A capture that doesn't parse is still stored
 as ordinary text; ingest prints a `CAPTURE-INVALID` warning and records no links for it, so nothing is
 lost and the problem is visible.
+
+**A capture is a pointer, not a copy.** It says what was decided in a line or two and uses `source` to
+name where the full story already lives: a doc section, a notes file, or a commit
+(`source: myrepo src/alerts.py @ a1b2c3d`). Paste the whole record into a capture and it quietly goes
+out of date. Point at the record and you can always check it. When an outcome changes, edit the
+capture you already have. When a new decision replaces an old one, write a new capture that
+`supersedes` the old one and mark the old one `superseded`. That way each decision has one capture,
+and you can see its history.
 
 ## Running it by hand
 

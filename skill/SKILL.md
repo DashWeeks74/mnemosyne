@@ -78,6 +78,7 @@ date: 2026-09-26
 what: Route UPS power alerts through Telegram
 outcome: Works, about 2s latency  # optional
 status: open                    # filed (default) | open | done | superseded
+source: ../docs/alerts.md#Routing  # optional but strongly encouraged: where the full record lives
 applies_to:                      # optional; <target>: <relation>
   - alert-routing: like
   - telegram-bot-setup: depends-on
@@ -86,6 +87,20 @@ applies_to:                      # optional; <target>: <relation>
 Optional free-text body.
 ```
 
+- **A capture is a pointer, not a copy.** Keep `what` and `outcome` to one line each and the body
+  empty or one line. Put the full record somewhere it already lives (a doc, a notes section, a commit)
+  and name it in `source:`, e.g. `source: ../docs/alerts.md#Routing` or
+  `source: myrepo src/alerts.py @ a1b2c3d`. If no record exists, write a short note first or cite the
+  commit; never invent a path. A pasted copy goes stale silently and can't be checked against
+  anything. `source:` is metadata, not a link, so it never shows as dangling.
+- **One capture per decision: update, don't duplicate.** Before writing, search the captures folder
+  for the id or the `what:` text (`recent` lists only open and recently touched captures). If a capture
+  already covers the decision and only its outcome or status changed, edit that file in place (same id)
+  and re-ingest. A new decision that replaces an old one gets a NEW id, links
+  `- <old-id>: supersedes`, and the old capture's `status:` becomes `superseded`. Never reuse an id
+  for a different decision: the id is the filename, so it would overwrite the old file.
+- **Shared folders:** if other people or agents write captures to the same folder, edit only your own.
+  For someone else's, write a capture that supersedes it and tell the user.
 - **Relations:** `like` ("reminds me of"), `depends-on`, `blocked-by`, `supersedes`, `contradicts`,
   `applies-to` (the default). A heading that contains `": "` needs an explicit `: applies-to` suffix.
 - **Targets:** another capture's slug (preferred), or a path, optionally with `#heading`. Prefer
@@ -96,7 +111,8 @@ Optional free-text body.
   recorded: fix it and re-ingest. An empty `.mnemo-captures` file in the folder stops a broader ingest
   from taking those files into another project.
 - **Nothing sensitive in captures.** Ingest redacts only the database copy; the `.md` file keeps
-  whatever was written.
+  whatever was written. A `source:` must not point into a folder the user has marked as protected
+  (`hooks/governed-roots.txt`).
 - **Session start:** `mnemosyne.cmd recent` lists open captures and the most recently touched ones
   (`-n N`, `--open-only`, `--project NAME`, `--json`). Query hits show linked captures one hop out
   (`->` outgoing, `<-` incoming).
