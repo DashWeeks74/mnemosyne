@@ -133,6 +133,10 @@ Just talk to Claude normally. Two things it'll do on its own once the skill is i
 - **Ask about the past:** *"what did we decide about the database?"*, *"why did we go with that
   approach?"* — it searches everything you've had it remember and shows you the actual source, not
   just an answer it made up. Every result names exactly where it came from.
+- **Capture a small decision:** *"capture that"*, *"file this decision"* — Claude writes a short note
+  (a "capture", see below) and saves it, with links to related decisions.
+- **Catch up at the start of a session:** *"what's still open?"* — Claude lists the open captures and
+  the ones you touched most recently.
 
 The first time it needs to compare *meaning* rather than just matching words, it downloads a small
 (~130MB) model to do that — **not Claude, not an agent, nothing that "thinks" or generates text.** It's
@@ -147,6 +151,101 @@ regardless of how much internet you have. It is *not* a claim that your whole Cl
 run with no internet at all — Claude Code itself always needs a connection to reach Anthropic.
 Mnemosyne just doesn't add a second company, a second API key, or a second point of failure on top of
 that.
+
+## Captures: small decisions that link to each other
+
+Not every decision deserves a whole document. A **capture** is one tiny markdown file — a few lines at
+the top saying what was decided — that can point at other captures or documents. Only three fields are
+required:
+
+```markdown
+---
+kind: capture
+id: ups-alert-routing
+what: Route UPS power alerts through Telegram
+status: open
+applies_to:
+  - alert-routing: like
+  - telegram-bot-setup: depends-on
+  - ../docs/network-plan.md#Alerting: supersedes
+---
+```
+
+The optional fields are `date`, `outcome`, `status` (`filed`, `open`, `done` or `superseded`) and
+`applies_to`, a list of links. Each link names its relation: `like`, `depends-on`, `blocked-by`,
+`supersedes`, `contradicts` or `applies-to` (the default). Keep captures in a folder of their own and
+ingest that folder like any other. When a search hits a capture, the result also shows what it links
+to and what links to it, one step out in each direction. A capture that doesn't parse is still stored
+as ordinary text; ingest prints a `CAPTURE-INVALID` warning and records no links for it, so nothing is
+lost and the problem is visible.
+
+## Running it by hand
+
+Claude runs these for you, but they're plain commands (Windows shown; on Mac use `mnemosyne.sh`):
+
+```text
+mnemosyne.cmd ingest "<file or folder>" --project NAME   save something (safe to re-run)
+mnemosyne.cmd query "why did we pick Postgres?"          search; every hit is a citation
+mnemosyne.cmd recent                                     open captures + most recently touched
+mnemosyne.cmd status                                     what's saved, and anything wrong with it
+mnemosyne.cmd flag-last "it found the wrong doc"         mark the last search as a bad result
+mnemosyne.cmd forget --path "<file>"                     remove one file's entries
+mnemosyne.cmd forget --project NAME                      PREVIEW a whole-project delete (deletes nothing)
+```
+
+- **`--json`** on `query`, `recent` and `status` prints one machine-readable document instead of text.
+- **Deleting a whole project takes two steps on purpose.** `forget --project NAME` on its own only
+  shows what would go and deletes nothing. To really delete, run it again with
+  `--expect-chunks N`, using the number the preview printed. If the number doesn't match (say,
+  something was added since), it refuses.
+- **Exit codes** are meant for scripts: 0 done, 1 nothing done, 2 refused, 3 refused a lexical-only
+  ingest (the private environment is broken; re-run setup), 4 finished but something wasn't fully
+  saved, 5 forget preview only, 97 the launcher found a broken install.
+- On Windows, put every argument in double quotes, and avoid `"`, `%` or `^` inside an argument or a
+  trailing backslash — `cmd.exe` re-reads the line and can misinterpret them. `mnemosyne.sh` doesn't
+  have this problem.
+
+## What it refuses to store
+
+The secret scan has several layers, because one regex list is never enough:
+
+- **Credential-named files are skipped** (`.env`, `credentials.json`, `id_rsa`, `*.pem`, anything
+  under `.ssh`, and so on).
+- **Secret-shaped values are redacted in place** — API keys, tokens, passwords — so the surrounding
+  reasoning is still searchable but the value is never stored. The patterns live in
+  `hooks/secret-rules.txt`; if that file is missing or has a rule Python can't read, `ingest` refuses
+  to run at all rather than store something it couldn't check.
+- **A file holding a private key is dropped whole**, since a key's body spans lines.
+- **UTF-16 files are held to a stricter line.** Windows tools (PowerShell 5.1's `>`, Notepad's
+  "Unicode") write UTF-16, which hides text from ordinary scanners. A UTF-16/32 or NUL-bearing file
+  holding *any* secret-shaped value is dropped whole, and one over 4 MB isn't indexed at all. To save
+  such a file, convert it to UTF-8 and take the secret out.
+- **Scan versions.** Every file remembers which version of the scan indexed it. When the scan gets
+  better (a Mnemosyne update, or you edit `hooks/secret-rules.txt`), `status` says which projects
+  were "indexed by an OLDER secret scan"; re-ingest them and each file is re-checked once.
+- **`.claude` folders are never indexed**, from any starting point, and there's no override.
+  Mnemosyne also refuses to put its own database or logs inside one.
+
+This is a strong filter, not a promise. Don't ingest something just to find out whether it's safe.
+
+## Protecting a folder (optional)
+
+If some folder on your machine must never be indexed — a live production system, say — list it in
+`hooks/governed-roots.txt` inside the Mnemosyne folder. Copy `hooks/governed-roots.txt.example` to
+start; it explains the format. A listed folder is refused by `ingest` (unless you pass
+`--allow-governed` on purpose), and Mnemosyne will never write its own files into it. It's matched by
+file identity as well as by name, so a shortcut, junction or alternate spelling that leads there is
+caught too. With no such file, nothing is governed, which is the normal setup. (This release reads
+Windows paths only; on Mac/Linux the file currently protects nothing.)
+
+## Where it keeps things
+
+Everything stays inside the Mnemosyne folder unless you say otherwise: the database
+(`mnemosyne.db`), a `logs` folder (search log, bad-result flags, a `mnemosyne-status.json` snapshot)
+and `watch-projects.txt` (projects you've marked high-stakes with `ingest --watch`). Set
+`MNEMOSYNE_DB` to keep the database somewhere else; the logs and watch list then move next to it.
+`MNEMOSYNE_LOG_DIR` moves just the logs. Mnemosyne checks every one of these locations before it
+writes anything, and refuses to start if one is unsafe.
 
 ## Installing somewhere other than your home folder
 

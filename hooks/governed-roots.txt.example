@@ -1,0 +1,22 @@
+# governed-roots.txt.example - OPTIONAL. Copy to governed-roots.txt (same folder) to use it.
+#
+# A "governed" folder is one Mnemosyne must never index by default and must never write its own
+# database, logs or watch list into - for example a folder that holds a live production system.
+# With no governed-roots.txt present, nothing is governed; that is the normal state for most installs.
+#
+# Format: one ABSOLUTE folder path per line. Lines starting with '#' and blank lines are ignored.
+#   - A bare drive root (C:\ or D:/) is IGNORED and reported by `status` and `ingest` - it would mean
+#     "the whole drive", which is never what a governed line is for.
+#   - A drive-relative or relative path (C:, C:folder, folder\sub) is IGNORED and reported too.
+#   - A folder is matched by spelling AND by file identity, so a junction, symlink or alternate
+#     spelling (\\?\C:\..., \\localhost\C$\...) that reaches it is governed as well.
+#
+# To index a governed folder anyway, pass `ingest <path> --allow-governed` deliberately.
+# Writing Mnemosyne's own files into a governed folder is refused with no override.
+#
+# Windows paths only in this release: the parser accepts a drive path (C:\...) or a UNC path
+# (\\server\share\...). A POSIX path such as /srv/x is IGNORED and reported, so on Mac/Linux this file
+# currently protects nothing.
+#
+# Example (replace with your own path):
+# C:\path\to\production-system

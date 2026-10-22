@@ -18,8 +18,17 @@ venv/
 *.db
 *.sqlite
 *.sqlite3
+*.db-wal
+*.db-shm
+*.db-journal
 logs/
 *.log
+watch-projects.txt
+mnemosyne-status.json*
+mnemosyne-*.jsonl
+
+# Your own governed-roots list names private local paths; only the .example ships
+hooks/governed-roots.txt
 
 # Defense-in-depth: never commit anything credential-shaped, even by accident
 *.env
