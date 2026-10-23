@@ -6,12 +6,19 @@ is False and Mnemosyne falls back to lexical-only, saying so. The bge query pref
 here (fastembed's query_embed does NOT apply it - verified), so query/passage asymmetry is ours to control
 and is covered by test_embed.py. Console/log strings are ASCII (Rule B).
 """
+import os
+
 import numpy as np
 
 MODEL_NAME = "BAAI/bge-small-en-v1.5"
 DIM = 384
 MAX_TOKENS = 512                         # bge-small hard cap; longer input is silently truncated
 BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
+# Where the ~130MB model lives. fastembed defaults to %TEMP%astembed_cache, which disk cleanup can wipe
+# (forcing a re-download, and failing outright offline). Keep it beside the install unless the user has
+# pointed FASTEMBED_CACHE_PATH somewhere else on purpose.
+MODEL_CACHE = os.environ.get("FASTEMBED_CACHE_PATH") or os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "models")
 
 try:
     from fastembed import TextEmbedding
@@ -27,7 +34,7 @@ def get_model():
     if not EMBED_AVAILABLE:
         return None
     if _model is None:
-        _model = TextEmbedding(MODEL_NAME)   # first ever call downloads ~130MB, then cached/offline
+        _model = TextEmbedding(MODEL_NAME, cache_dir=MODEL_CACHE)   # first call downloads ~130MB, then offline
     return _model
 
 
