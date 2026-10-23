@@ -38,3 +38,4 @@ hooks/governed-roots.txt
 *.pem
 *.key
 *credentials*.json
+models/
