@@ -427,7 +427,9 @@ SECRET_RULES = load_secret_rules(SECRET_RULES_PROBLEMS)
 # would otherwise keep a matching tag and never be re-scanned.
 # .2: the UTF-16/32 bright line; .3: it also covers any NUL-bearing file; .4: `redecide` removed and the
 # `too-large` drop added (round-10 red-team: a round-9 DB could hold a re-indexed mojibake row under an equal tag).
-SCAN_VERSION = "2026-10-05.4"
+# .2026-10-22.1: identifier exemption widened (word+number parts, caps acronyms, all-lowercase slugs skip the
+# short-word mean) - rows masked by the older rule must be re-scanned so the identifiers come back.
+SCAN_VERSION = "2026-10-22.1"
 
 
 def _scan_tag():
@@ -701,6 +703,12 @@ _MIN_MEAN_WORDLEN  = 3.2
 _MAX_WORD_CHARS    = 16        # ANY unbroken run longer than this is a blob, not a word
                                # ('canonicalisation' is exactly 16 - the longest word in the corpus)
 _MAX_PART_DIGITS   = 4         # identifiers carry years/versions/indices; 5+ digits is a serial or ID
+# A whole word+number piece (between - or _) is one identifier part, not key material: ema200, 30m, 4h,
+# rsi2, nt8, sma10, b13, FLAG001. Matched on the WHOLE piece, before the camel split, in one case only,
+# so a random mixed-case run cannot assemble itself out of these. Added 2026-10-22 (trading corpus:
+# 3,877 masked spans across 10k notes, essentially all study names, block ids and chart paths).
+_PART_WORDNUM      = re.compile(r"[a-z]{1,8}[0-9]{1,4}|[0-9]{1,4}[a-z]{1,3}")
+_PART_ACRONYM      = re.compile(r"[A-Z]{2,5}")   # a WHOLE piece in caps: a ticker or acronym
 
 
 def _segment_is_identifier(seg):
@@ -714,6 +722,12 @@ def _segment_is_identifier(seg):
         return False
     nparts, alpha_all = 0, []
     for piece in pieces:
+        if _PART_WORDNUM.fullmatch(piece) or (piece.isupper() and _PART_WORDNUM.fullmatch(piece.lower())):
+            nparts += 1                                # word+number, e.g. ema200 / 15m / FLAG001
+            continue
+        if _PART_ACRONYM.fullmatch(piece):
+            nparts += 1                                # ticker / acronym, e.g. NQ, ES, PB, OHLCV
+            continue
         parts = [p for p in _CAMEL_SPLIT.split(piece) if p]
         nparts += len(parts)
         # LOAD-BEARING: no part may mix letters and digits. base64 / base64url / hex key material
@@ -746,6 +760,11 @@ def _segment_is_identifier(seg):
         return True                                    # a lone word ('c', 'hooks', 'charting')
                                                        # already cleared the length cap above; the
                                                        # mean below is meaningless for one word.
+    # An all-lowercase segment is a slug, not key material: generated secrets mix case (base64/base64url)
+    # or are hex (caught above), so the short-word mean below only guards mixed-case runs. Without this,
+    # slugs built from short words - flat_by_1645_et (2.33), gap_env (3.0) - were masked. 2026-10-22.
+    if seg.islower():
+        return True
     # Random mixed-case material camel-splits into many 1-2 char runs; real words are longer.
     return sum(len(p) for p in alpha_all) / len(alpha_all) >= _MIN_MEAN_WORDLEN
 

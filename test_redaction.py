@@ -86,6 +86,20 @@ MUST_KEEP = [
     # Font and product names.
     "IBMPlexMono-SemiBold",
     "AcmeWidgets-branded",
+    # Trading-research corpus (2026-10-22): word+number parts and short-word slugs, all masked before.
+    "trailing_12m_return_sign",
+    "limit_at_ema200_gold_line",
+    "open_drive_30m_close",
+    "rsi2_below_10_at_close",
+    "h4_impulse_expanding_bands",
+    "nt8_tick_export_artifacts",
+    "tori_trendline_scalp_b13",
+    "/library/blocks/risk_rule/flat_by_1645_et",
+    "dhall_auction_es_15m",
+    "/c/PQS/gap_env/Scripts/python",
+    "PB-NEG-001-MNQ-OHLCV-Falsification-FLAG001",
+    "PB-004-ES-NQ-Bull-Flag",
+    "data/futures/NQ_1min_2021_2026_ET",
 ]
 
 # Structures that carry MEANING, not just a name. The memory graph is built out of these; the old
